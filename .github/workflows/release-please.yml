@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release-please:
@@ -34,12 +35,9 @@ jobs:
         with:
           node-version: "18.x"
           registry-url: "https://registry.npmjs.org"
-
       - run: npm ci
-
       - name: Package Extension
         run: npm run vscode:package
-
       - name: Publish to VS Code Marketplace
         run: npm run vscode:publish
         env:
