@@ -5,6 +5,10 @@
   "description": "Display CRON schedules in human-readable format",
   "version": "0.0.1",
   "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodyVal/cron-lens.git"
+  },
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -45,7 +49,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "vscode:package": "vsce package --out ./bin/",
+    "vscode:package": "vsce package --out ./bin/cron-lens-$(node -p \"require('./package.json').version\").vsix",
     "vscode:publish": "vsce publish",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",

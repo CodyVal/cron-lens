@@ -16,6 +16,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
     steps:
       - uses: google-github-actions/release-please-action@v3
         id: release
@@ -36,8 +37,16 @@ jobs:
           node-version: "18.x"
           registry-url: "https://registry.npmjs.org"
       - run: npm ci
+
       - name: Package Extension
         run: npm run vscode:package
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./bin/*.vsix
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+
       - name: Publish to VS Code Marketplace
         run: npm run vscode:publish
         env:
