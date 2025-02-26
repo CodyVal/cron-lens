@@ -10,12 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:javascript",
-    "onLanguage:typescript",
-    "onLanguage:python",
-    "onLanguage:java",
-    "onLanguage:yaml",
-    "onLanguage:json"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -26,6 +21,22 @@
           "type": "boolean",
           "default": true,
           "description": "Enable or disable CRON Lens"
+        },
+        "cronLens.filePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "*.js",
+            "*.ts",
+            "*.py",
+            "*.java",
+            "*.yaml",
+            "*.yml",
+            "*.json"
+          ],
+          "description": "File patterns where CRON Lens should be active (e.g. *.js, *.config)"
         }
       }
     }
@@ -55,6 +66,7 @@
   },
   "dependencies": {
     "cron-parser": "^4.2.0",
-    "cronstrue": "^2.11.0"
+    "cronstrue": "^2.11.0",
+    "minimatch": "^5.1.0"
   }
 }

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as cronParser from "cron-parser";
 import * as cronstrue from "cronstrue";
+import * as minimatch from "minimatch";
 
 // Create a decoration type for inline CRON descriptions
 const cronDecorationType = vscode.window.createTextEditorDecorationType({
@@ -13,18 +14,6 @@ const cronDecorationType = vscode.window.createTextEditorDecorationType({
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("CRON Lens is now active");
-
-  // Register for different file types
-  const supportedLanguages = [
-    "javascript",
-    "typescript",
-    "python",
-    "java",
-    "yaml",
-    "json",
-  ];
-
-  console.log("Supported languages:", supportedLanguages);
 
   // Update decorations when the active editor changes
   vscode.window.onDidChangeActiveTextEditor(
@@ -67,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 // Regular expressions to match CRON expressions
 const potentialCronPattern =
-  /['"]?(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)['"]?/g;
+  /(?:['"])?(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)\s+(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+)*(?:\/\d+)?)(?:['"])?/g;
 
 function updateDecorations(editor: vscode.TextEditor | undefined) {
   if (!editor) {
@@ -77,6 +66,31 @@ function updateDecorations(editor: vscode.TextEditor | undefined) {
   // Check if the extension is enabled
   const config = vscode.workspace.getConfiguration("cronLens");
   if (!config.get("enabled", true)) {
+    editor.setDecorations(cronDecorationType, []);
+    return;
+  }
+
+  // Get file patterns from configuration
+  const filePatterns = config.get<string[]>("filePatterns", [
+    "*.js",
+    "*.ts",
+    "*.py",
+    "*.java",
+    "*.yaml",
+    "*.yml",
+    "*.json",
+  ]);
+
+  // Check if current file matches any of the patterns
+  const fileName = editor.document.fileName;
+  // Extract just the base name of the file for pattern matching
+  const basename = fileName.split(/[\\/]/).pop() || "";
+  const isFileSupported = filePatterns.some((pattern) => {
+    const matcher = new minimatch.Minimatch(pattern, { matchBase: true });
+    return matcher.match(basename);
+  });
+
+  if (!isFileSupported) {
     editor.setDecorations(cronDecorationType, []);
     return;
   }
@@ -135,13 +149,18 @@ function tryAddDecoration(
       // Place decoration at the end of the line
       decorationPosition = line.range.end;
     } else {
-      // Find the end of the CRON expression in the line
+      // Find the CRON expression in the line and include any surrounding quotes
       const cronIndex = lineText.indexOf(cronExpression);
       if (cronIndex !== -1) {
-        decorationPosition = new vscode.Position(
-          lineNumber,
-          cronIndex + cronExpression.length
-        );
+        let endPos = cronIndex + cronExpression.length;
+        // Check if there's a quote after the CRON expression
+        if (
+          endPos < lineText.length &&
+          (lineText[endPos] === '"' || lineText[endPos] === "'")
+        ) {
+          endPos++;
+        }
+        decorationPosition = new vscode.Position(lineNumber, endPos);
       } else {
         // Fallback to end of line if CRON expression can't be found
         decorationPosition = line.range.end;
@@ -188,13 +207,18 @@ function tryAddDecoration(
         // Place decoration at the end of the line
         decorationPosition = line.range.end;
       } else {
-        // Find the end of the CRON expression in the line
+        // Find the CRON expression in the line and include any surrounding quotes
         const cronIndex = line.text.indexOf(cronExpression);
         if (cronIndex !== -1) {
-          decorationPosition = new vscode.Position(
-            lineNumber,
-            cronIndex + cronExpression.length
-          );
+          let endPos = cronIndex + cronExpression.length;
+          // Check if there's a quote after the CRON expression
+          if (
+            endPos < line.text.length &&
+            (line.text[endPos] === '"' || line.text[endPos] === "'")
+          ) {
+            endPos++;
+          }
+          decorationPosition = new vscode.Position(lineNumber, endPos);
         } else {
           // Fallback to end of line if CRON expression can't be found
           decorationPosition = line.range.end;
