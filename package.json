@@ -3,6 +3,7 @@
   "displayName": "CRON Lens",
   "description": "Display CRON schedules in human-readable format",
   "version": "0.0.1",
+  "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.60.0"
   },
