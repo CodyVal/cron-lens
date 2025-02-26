@@ -1,5 +1,6 @@
 {
   "name": "cron-lens",
+  "publisher": "CodyVal",
   "displayName": "CRON Lens",
   "description": "Display CRON schedules in human-readable format",
   "version": "0.0.1",
